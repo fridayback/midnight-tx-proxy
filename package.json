@@ -1,0 +1,25 @@
+{
+  "name": "midnight-tx-proxy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fridayback/midnight-tx-proxy.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fridayback/midnight-tx-proxy/issues"
+  },
+  "homepage": "https://github.com/fridayback/midnight-tx-proxy#readme",
+  "dependencies": {
+    "@scure/bip39": "^2.0.1",
+    "classic-level": "^3.0.0",
+    "dotenv": "^17.2.3",
+    "midnight-crosschain": "https://github.com/fridayback/midnight-crosschain.git#0.21"
+  }
+}
