@@ -47,8 +47,14 @@ class LoggerManager {
 
     const logDirResolved = path.resolve(this.config.path);
 
+    const utcTimestamp = winston.format((info) => {
+      // 使用 toISOString() 生成 UTC 时间字符串（ISO 8601 格式）
+      info.timestamp = new Date().toISOString();
+      return info;
+    });
+
     const baseFormats = winston.format.combine(
-      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+      utcTimestamp(),
       winston.format.errors({ stack: true }),
       resolveSplatFormat(),
     );
@@ -82,12 +88,14 @@ class LoggerManager {
     this.globalLogger = winston.createLogger({
       level: this.config.level,
       transports: [
-        new winston.transports.Console({ format: consoleFormat }),
+        new winston.transports.Console({ format: consoleFormat, level: this.config.level }),
         new DailyRotateFile({
           filename: path.join(logDirResolved, 'midnight-tx-proxy-%DATE%.log'),
           datePattern: 'YYYY-MM-DD',
           maxFiles: `${this.config.retentionDays}d`,
           format: fileFormat,
+          watchLog: true,
+          maxSize: '50m',
           zippedArchive: false,
         }),
       ],
