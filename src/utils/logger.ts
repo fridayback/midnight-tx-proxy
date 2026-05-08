@@ -2,6 +2,7 @@ import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import * as fs from 'fs';
 import * as path from 'path';
+import { format as utilFormat } from 'util';
 
 export interface LogConfig {
   path: string;
@@ -18,16 +19,27 @@ const DEFAULT_LOG_CONFIG: LogConfig = {
 const LOG_LEVELS = ['error', 'warn', 'info', 'debug'] as const;
 type LogLevel = (typeof LOG_LEVELS)[number];
 
+const SPLAT = Symbol.for('splat');
+
+/**
+ * 自定义格式：将 message + splat 参数通过 util.format 合并
+ * 支持 logger.info('msg %s %d', a, b) 和 logger.info('msg', extraArg) 两种模式
+ */
+const resolveSplatFormat = winston.format((info) => {
+  const splatArgs = info[SPLAT] as any[] | undefined;
+  if (splatArgs && splatArgs.length > 0) {
+    info.message = utilFormat(info.message, ...splatArgs);
+    delete info[SPLAT];
+  }
+  return info;
+});
+
 class LoggerManager {
   private globalLogger: winston.Logger | null = null;
   private config: LogConfig = { ...DEFAULT_LOG_CONFIG };
 
-  /**
-   * 初始化日志管理器，必须在服务启动时调用
-   */
   init(config: LogConfig): void {
     this.config = { ...config };
-    // 确保日志目录存在
     const logDir = path.resolve(this.config.path);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
@@ -35,10 +47,15 @@ class LoggerManager {
 
     const logDirResolved = path.resolve(this.config.path);
 
-    const consoleFormat = winston.format.combine(
-      winston.format.colorize(),
+    const baseFormats = winston.format.combine(
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
       winston.format.errors({ stack: true }),
+      resolveSplatFormat(),
+    );
+
+    const consoleFormat = winston.format.combine(
+      baseFormats,
+      winston.format.colorize(),
       winston.format.printf(({ timestamp, level, message, module, stack }) => {
         const moduleStr = (module as string || 'Unknown').padEnd(18);
         let log = `[${timestamp}] ${level} [${moduleStr}] ${message}`;
@@ -50,8 +67,7 @@ class LoggerManager {
     );
 
     const fileFormat = winston.format.combine(
-      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-      winston.format.errors({ stack: true }),
+      baseFormats,
       winston.format.printf(({ timestamp, level, message, module, stack }) => {
         const levelStr = (level as string).toUpperCase().padEnd(5);
         const moduleStr = (module as string || 'Unknown');
@@ -65,11 +81,8 @@ class LoggerManager {
 
     this.globalLogger = winston.createLogger({
       level: this.config.level,
-      format: fileFormat,
       transports: [
-        new winston.transports.Console({
-          format: consoleFormat,
-        }),
+        new winston.transports.Console({ format: consoleFormat }),
         new DailyRotateFile({
           filename: path.join(logDirResolved, 'midnight-tx-proxy-%DATE%.log'),
           datePattern: 'YYYY-MM-DD',
