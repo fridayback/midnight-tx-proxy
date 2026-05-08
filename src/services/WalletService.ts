@@ -3,6 +3,7 @@ import { AppConfig } from '../types.js';
 import { ISeedProvider } from '../interfaces/ISeedProvider.js';
 import * as fs from 'fs/promises';
 import { getLogger } from '../utils/logger.js';
+import path from 'path';
 
 const logger = getLogger('WalletService');
 
@@ -19,6 +20,12 @@ export class WalletService {
   constructor(config: AppConfig, seedProvider: ISeedProvider) {
     this.config = config;
     this.seedProvider = seedProvider;
+  }
+
+  private snapshotfile(name:string): string {
+    const snapshotDir = this.config.wallet?.walletSnapshotPath || './wallet-snapshots';
+    const snapshotName = this.config.wallet?.walletSnapshotName || name+'.json';
+    return path.join(snapshotDir, snapshotName);
   }
 
   /**
@@ -45,13 +52,17 @@ export class WalletService {
     );
 
     this.walletSdk = new MidnightWalletSDK(appConfig, seed);
+    logger.info('Wallet addresses:',this.walletSdk.getAccountAddress());
 
-    const serializedState = await this.readWalletState(seed);
+    const snapshotfile = this.snapshotfile(this.walletSdk.getAccountAddress().unshieldedAddress);
+    // 如果路径不存在，创建路径
+    await fs.mkdir(path.dirname(snapshotfile), { recursive: true });
+    const serializedState = await this.readWalletState(snapshotfile);
     logger.info('Initializing wallet SDK...');
     await this.walletSdk.initWallet(
-      (state) => this.storeWalletState(state, seed),
+      (state) => this.storeWalletState(state, snapshotfile),
       serializedState,
-      60000
+      (this.config.wallet?.snapshotIntervalSec ?? 60)*1000
     );
 
     const address = this.walletSdk.getAccountAddress();
@@ -94,19 +105,19 @@ export class WalletService {
     return await this.walletSdk.getBalances();
   }
 
-  private async storeWalletState(state: any, seed: string): Promise<void> {
+  private async storeWalletState(state: any, snapshotFile: string): Promise<void> {
     try {
-      const filePath = `./serialized-state-${this.config.networkId}-${seed.substring(0, 8)}`;
-      await fs.writeFile(filePath, JSON.stringify(state), 'ascii');
+      // const filePath = `./serialized-state-${this.config.networkId}-${snapshotFile.substring(0, 8)}`;
+      await fs.writeFile(snapshotFile, JSON.stringify(state), 'ascii');
     } catch (error) {
       logger.error('Error storing wallet state', { error: String(error) });
     }
   }
 
-  private async readWalletState(seed: string): Promise<any> {
+  private async readWalletState(snapshotFile: string): Promise<any> {
     try {
-      const filePath = `./serialized-state-${this.config.networkId}-${seed.substring(0, 8)}`;
-      return JSON.parse(await fs.readFile(filePath, 'ascii'));
+      // const filePath = `./serialized-state-${this.config.networkId}-${snapshotFile.substring(0, 8)}`;
+      return JSON.parse(await fs.readFile(snapshotFile, 'ascii'));
     } catch (error) {
       logger.warn('No previous wallet state found, starting fresh', { error: String(error) });
       return undefined;

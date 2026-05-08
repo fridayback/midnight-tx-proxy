@@ -28,7 +28,7 @@ export function createTxRouter(txService: TxService): Router {
   router.post('/tx-service/voteMultiCrossProposal', async (req: Request, res: Response) => {
     try {
       const params = req.body;
-      logger.info('POST voteMultiCrossProposal request received', { count: params.uniqueIds?.length });
+      logger.info('POST voteMultiCrossProposal request received', { count: params?.length });
       const result = await txService.voteMultiCrossProposal(params);
       const response: TxResponse = { success: true, data: result };
       res.json(response);

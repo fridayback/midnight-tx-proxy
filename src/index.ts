@@ -39,6 +39,11 @@ async function loadConfig(): Promise<AppConfig> {
       retentionDays: config.log?.retentionDays ?? 7,
       level: config.log?.level || 'info',
     },
+    wallet: {
+      snapshotIntervalSec: config.wallet?.snapshotIntervalSec,
+      walletSnapshotPath: config.wallet?.walletSnapshotPath,
+      walletSnapshotName: config.wallet?.walletSnapshotName,
+    },
   };
 }
 

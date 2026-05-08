@@ -347,12 +347,10 @@ curl -X POST http://localhost:3000/tx-service/smgRelease \
 ```bash
 curl -X POST http://localhost:3000/tx-service/voteMultiCrossProposal \
   -H "Content-Type: application/json" \
-  -d '{
-    "uniqueIds": [
-      { "uniqueId": "0x...", "ttl": 10000000000 },
-      { "uniqueId": "0x...", "ttl": 10000000000 }
-    ]
-  }'
+  -d '[
+      { "uniqueId": "0x...", "ttl": 1762836067000 },
+      { "uniqueId": "0x...", "ttl": 1762836067000 }
+    ]'
 ```
 
 **请求参数：**

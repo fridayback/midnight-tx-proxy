@@ -11,6 +11,11 @@ export interface AppConfig {
   readonly serverPort: number;
   readonly requestTimeout: number;
   readonly log: LogConfig;
+  readonly wallet?: {
+    readonly snapshotIntervalSec?: number;
+    readonly walletSnapshotPath?: string;
+    readonly walletSnapshotName?: string;
+  };
 }
 
 export interface HealthStatus {

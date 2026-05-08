@@ -6,3 +6,4 @@ serialized-state-*
 midnight-level-db/*
 log/*
 .vscode/launch.json
+wallet-snapshots/*

@@ -33,7 +33,7 @@ export class TxService {
     toAddr: string;
     ttl: number;
   }): Promise<Record<string, unknown>> {
-    logger.info('smgMint start', { uniqueId: params.uniqueId, tokenPairId: params.tokenPairId });
+    logger.info('smgMint start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
@@ -59,14 +59,14 @@ export class TxService {
   /**
    * 执行 voteMultiCrossProposal 操作
    */
-  async voteMultiCrossProposal(params: {
-    uniqueIds: Array<{ uniqueId: string; ttl: string | number | bigint }>;
-  }): Promise<Record<string, unknown>> {
-    logger.info('voteMultiCrossProposal start', { count: params.uniqueIds.length });
+  async voteMultiCrossProposal(params: 
+     Array<{ uniqueId: string; ttl: string | number | bigint }>
+  ): Promise<Record<string, unknown>> {
+    logger.info('voteMultiCrossProposal start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
-      const result = await api.voteMultiCrossProposal(params.uniqueIds);
+      const result = await api.voteMultiCrossProposal(params);
       logger.info('voteMultiCrossProposal success', { blockHeight: result.public.blockHeight?.toString(), txHash: result.public.txHash });
       return this.formatResult(result);
     } catch (error: any) {
@@ -89,7 +89,7 @@ export class TxService {
     toAddr: string;
     ttl: number;
   }): Promise<Record<string, unknown>> {
-    logger.info('smgRelease start', { uniqueId: params.uniqueId, tokenPairId: params.tokenPairId });
+    logger.info('smgRelease start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
@@ -118,7 +118,7 @@ export class TxService {
   async executeCrossProposal(params: {
     uniqueId: string;
   }): Promise<Record<string, unknown>> {
-    logger.info('executeCrossProposal start', { uniqueId: params.uniqueId });
+    logger.info('executeCrossProposal start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
