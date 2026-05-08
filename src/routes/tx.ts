@@ -18,9 +18,9 @@ export function createTxRouter(txService: TxService): Router {
     } catch (error: any) {
       logger.error('POST smgMint error', { error: error.message });
       if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
-        res.status(429).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
+        res.status(200).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
       } else {
-        res.status(500).json({ success: false, error: error.message ?? String(error) });
+        res.status(200).json({ success: false, error: error.message ?? String(error) });
       }
     }
   });
@@ -35,9 +35,9 @@ export function createTxRouter(txService: TxService): Router {
     } catch (error: any) {
       logger.error('POST voteMultiCrossProposal error', { error: error.message });
       if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
-        res.status(429).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
+        res.status(200).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
       } else {
-        res.status(500).json({ success: false, error: error.message ?? String(error) });
+        res.status(200).json({ success: false, error: error.message ?? String(error) });
       }
     }
   });
@@ -52,9 +52,9 @@ export function createTxRouter(txService: TxService): Router {
     } catch (error: any) {
       logger.error('POST smgRelease error', { error: error.message });
       if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
-        res.status(429).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
+        res.status(200).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
       } else {
-        res.status(500).json({ success: false, error: error.message ?? String(error) });
+        res.status(200).json({ success: false, error: error.message ?? String(error) });
       }
     }
   });
@@ -69,9 +69,9 @@ export function createTxRouter(txService: TxService): Router {
     } catch (error: any) {
       logger.error('POST executeCrossProposal error', { error: error.message });
       if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
-        res.status(429).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
+        res.status(200).json({ success: false, error: `Too many requests, please try again later. ${error.message}` });
       } else {
-        res.status(500).json({ success: false, error: error.message ?? String(error) });
+        res.status(200).json({ success: false, error: error.message ?? String(error) });
       }
     }
   });
