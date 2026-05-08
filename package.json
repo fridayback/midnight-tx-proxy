@@ -26,7 +26,9 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "midnight-crosschain": "https://github.com/fridayback/midnight-crosschain.git#0.21"
+    "midnight-crosschain": "https://github.com/fridayback/midnight-crosschain.git#0.21",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -3,10 +3,10 @@ import { WalletService } from '../services/WalletService.js';
 import { ContractService } from '../services/ContractService.js';
 import { TxService } from '../services/TxService.js';
 import { HealthStatus, WalletInfo, BalancesInfo, MemoryInfo } from '../types.js';
+import { getLogger } from '../utils/logger.js';
 
-/**
- * 健康检查和信息查询路由
- */
+const logger = getLogger('HealthRoutes');
+
 export function createHealthRouter(
   walletService: WalletService,
   contractService: ContractService,
@@ -15,10 +15,8 @@ export function createHealthRouter(
 ): Router {
   const router = Router();
 
-  /**
-   * GET /health - 健康检查
-   */
   router.get('/health', (_req: Request, res: Response) => {
+    logger.debug('Health check requested');
     const status: HealthStatus = {
       status: 'ok',
       uptime: Math.floor((Date.now() - startTime) / 1000),
@@ -27,9 +25,6 @@ export function createHealthRouter(
     res.json(status);
   });
 
-  /**
-   * GET /info/wallet - 获取钱包地址信息
-   */
   router.get('/info/wallet', (_req: Request, res: Response) => {
     try {
       const address = walletService.getWalletAddress();
@@ -41,21 +36,15 @@ export function createHealthRouter(
       };
       res.json({ success: true, data: walletInfo });
     } catch (error: any) {
+      logger.error('Failed to get wallet address', { error: error.message });
       res.status(500).json({ success: false, error: error.message });
     }
   });
 
-  /**
-   * GET /info/balances - 获取钱包余额
-   */
   router.get('/info/balances', async (_req: Request, res: Response) => {
     try {
       const balances = await walletService.getBalances();
-      // 使用 replacer 将 bigint 转换为字符串
       const replacer = (key: any, value: any) => typeof value === 'bigint' ? value.toString() : value;
-
-      // 反序列化，使用 reviver 将字符串转换回 bigint
-      // const reviver = (key: any, value: any) => typeof value === 'string' && /^\d+$/.test(value) ? BigInt(value) : value;
       const serialized = JSON.stringify(balances, replacer);
       const deserialized = JSON.parse(serialized);
       const balancesInfo: BalancesInfo = {
@@ -65,13 +54,11 @@ export function createHealthRouter(
       };
       res.json({ success: true, data: balancesInfo });
     } catch (error: any) {
+      logger.error('Failed to get balances', { error: error.message });
       res.status(500).json({ success: false, error: error.message });
     }
   });
 
-  /**
-   * GET /info/memory - 获取内存使用情况
-   */
   router.get('/info/memory', (_req: Request, res: Response) => {
     try {
       const mem = process.memoryUsage();
@@ -84,18 +71,17 @@ export function createHealthRouter(
       };
       res.json({ success: true, data: memoryInfo });
     } catch (error: any) {
+      logger.error('Failed to get memory info', { error: error.message });
       res.status(500).json({ success: false, error: error.message });
     }
   });
 
-  /**
-   * GET /info/concurrency - 获取并发度状态
-   */
   router.get('/info/concurrency', (_req: Request, res: Response) => {
     try {
       const concurrencyStatus = txService.getConcurrencyLimiter().getStatus();
       res.json({ success: true, data: concurrencyStatus });
     } catch (error: any) {
+      logger.error('Failed to get concurrency status', { error: error.message });
       res.status(500).json({ success: false, error: error.message });
     }
   });

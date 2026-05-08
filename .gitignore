@@ -3,3 +3,7 @@ yarn.lock
 dist
 .env
 serialized-state-*
+midnight-level-db/*
+log/.636c801a0bc9611e46b991645fbdba051526de50-audit.json
+log/midnight-tx-proxy-2026-05-08.log
+.vscode/launch.json

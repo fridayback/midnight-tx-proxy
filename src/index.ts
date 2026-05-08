@@ -10,8 +10,11 @@ import { TxService } from './services/TxService.js';
 import { ConcurrencyLimiter } from './middleware/ConcurrencyLimiter.js';
 import { createHealthRouter } from './routes/health.js';
 import { createTxRouter } from './routes/tx.js';
+import { createLogRouter } from './routes/log.js';
+import { loggerManager, getLogger } from './utils/logger.js';
 
 const startTime = Date.now();
+const logger = getLogger('Main');
 
 async function loadConfig(): Promise<AppConfig> {
   const networkId = process.env.NETWORK_ID || 'preprod';
@@ -31,15 +34,21 @@ async function loadConfig(): Promise<AppConfig> {
     zkConfigPath: config.zkConfigPath || '',
     serverPort: config.serverPort || 3000,
     requestTimeout: config.requestTimeout || 300000,
+    log: {
+      path: config.log?.path || './log',
+      retentionDays: config.log?.retentionDays ?? 7,
+      level: config.log?.level || 'info',
+    },
   };
 }
 
 async function main(): Promise<void> {
-  console.info('Starting midnight-tx-proxy service...');
-
   // 加载配置
   const config = await loadConfig();
-  console.info('Config loaded:', JSON.stringify({ ...config, contractAddress: config.contractAddress ? '***' : '' }));
+  // 初始化日志管理器
+  loggerManager.init(config.log);
+  logger.info('Starting midnight-tx-proxy service...');
+  logger.info('Config loaded', { networkId: config.networkId, serverPort: config.serverPort });
 
   // 创建seed provider（从环境变量获取seed）
   const seedProvider = new EnvSeedProvider();
@@ -47,7 +56,7 @@ async function main(): Promise<void> {
   // 创建钱包服务
   const walletService = new WalletService(config, seedProvider);
   await walletService.initialize();
-  console.info('Wallet service initialized');
+  logger.info('Wallet service initialized');
 
   // 获取wallet SDK并创建并发度provider
   const walletSdk = walletService.getWalletSdk();
@@ -56,16 +65,16 @@ async function main(): Promise<void> {
   // 初始化并发度
   const initialConcurrency = await concurrencyProvider.getMaxConcurrency();
   const concurrencyLimiter = new ConcurrencyLimiter(concurrencyProvider, initialConcurrency, config.requestTimeout);
-  console.info(`Concurrency limiter initialized with max ${initialConcurrency}`);
+  logger.info(`Concurrency limiter initialized with max ${initialConcurrency}`);
 
   // 创建合约服务
   const contractService = new ContractService(config, walletService);
   await contractService.initialize();
-  console.info('Contract service initialized');
+  logger.info('Contract service initialized');
 
   // 创建交易服务
   const txService = new TxService(contractService, concurrencyLimiter);
-  console.info('Tx service initialized');
+  logger.info('Tx service initialized');
 
   // 创建Express应用
   const app = express();
@@ -77,11 +86,12 @@ async function main(): Promise<void> {
   // 注册路由
   app.use(createHealthRouter(walletService, contractService, txService, startTime));
   app.use(createTxRouter(txService));
+  app.use(createLogRouter());
 
   // 启动服务
   const port = config.serverPort;
   app.listen(port, () => {
-    console.info(`
+    logger.info(`
 ====================================================
   Midnight Tx Proxy Service Started
   Port: ${port}
@@ -89,16 +99,14 @@ async function main(): Promise<void> {
   Contract: ${config.contractAddress || 'Not configured'}
   Max Concurrency: ${initialConcurrency}
   Request Timeout: ${config.requestTimeout}ms
-  Health: http://localhost:${port}/health
-  Wallet: http://localhost:${port}/info/wallet
-  Balances: http://localhost:${port}/info/balances
-  Memory: http://localhost:${port}/info/memory
+  Log Level: ${loggerManager.getLevel()}
+  Log Path: ${config.log.path}
 ====================================================
     `);
   });
 }
 
 main().catch((error) => {
-  console.error('Failed to start service:', error);
+  logger.error('Failed to start service', { error: String(error) });
   process.exit(1);
 });

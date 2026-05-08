@@ -4,6 +4,9 @@ import {
 } from 'midnight-crosschain';
 import { AppConfig } from '../types.js';
 import { WalletService } from './WalletService.js';
+import { getLogger } from '../utils/logger.js';
+
+const logger = getLogger('ContractService');
 
 /**
  * 合约实例管理服务
@@ -27,19 +30,19 @@ export class ContractService {
     const walletSdk = this.walletService.getWalletSdk();
 
     this.api = new CrossChainApi();
-    console.info('Initializing CrossChainApi...');
+    logger.info('Initializing CrossChainApi...');
 
     await this.api.init(this.config, walletSdk);
-    console.info('CrossChainApi initialized');
+    logger.info('CrossChainApi initialized');
 
     // 加入合约
     if (this.config.contractAddress) {
-      console.info(`Joining contract at: ${this.config.contractAddress}`);
+      logger.info('Joining contract', { contractAddress: this.config.contractAddress });
       await this.api.join(this.config.contractAddress);
       this.contractAddress = this.config.contractAddress;
-      console.info('Contract joined successfully');
+      logger.info('Contract joined successfully');
     } else {
-      console.warn('No contract address configured, skipping join');
+      logger.warn('No contract address configured, skipping join');
     }
   }
 

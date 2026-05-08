@@ -1,3 +1,5 @@
+import { LogConfig } from './utils/logger.js';
+
 export interface AppConfig {
   readonly indexer: string;
   readonly indexerWS: string;
@@ -8,6 +10,7 @@ export interface AppConfig {
   readonly zkConfigPath: string;
   readonly serverPort: number;
   readonly requestTimeout: number;
+  readonly log: LogConfig;
 }
 
 export interface HealthStatus {

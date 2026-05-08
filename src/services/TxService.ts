@@ -1,7 +1,9 @@
 import { FinalizedCallTxData } from '@midnight-ntwrk/midnight-js-contracts';
 import { ContractService } from './ContractService.js';
 import { ConcurrencyLimiter } from '../middleware/ConcurrencyLimiter.js';
-import { stat } from 'fs';
+import { getLogger } from '../utils/logger.js';
+
+const logger = getLogger('TxService');
 
 /**
  * 交易操作服务
@@ -31,6 +33,7 @@ export class TxService {
     toAddr: string;
     ttl: number;
   }): Promise<Record<string, unknown>> {
+    logger.info('smgMint start', { uniqueId: params.uniqueId, tokenPairId: params.tokenPairId });
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
@@ -43,7 +46,11 @@ export class TxService {
         params.toAddr,
         params.ttl
       );
+      logger.info('smgMint success', { blockHeight: result.public.blockHeight?.toString(), txHash: result.public.txHash });
       return this.formatResult(result);
+    } catch (error: any) {
+      logger.error('smgMint failed', { error: error.message });
+      throw error;
     } finally {
       await this.concurrencyLimiter.release();
     }
@@ -55,11 +62,16 @@ export class TxService {
   async voteMultiCrossProposal(params: {
     uniqueIds: Array<{ uniqueId: string; ttl: string | number | bigint }>;
   }): Promise<Record<string, unknown>> {
+    logger.info('voteMultiCrossProposal start', { count: params.uniqueIds.length });
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
       const result = await api.voteMultiCrossProposal(params.uniqueIds);
+      logger.info('voteMultiCrossProposal success', { blockHeight: result.public.blockHeight?.toString(), txHash: result.public.txHash });
       return this.formatResult(result);
+    } catch (error: any) {
+      logger.error('voteMultiCrossProposal failed', { error: error.message });
+      throw error;
     } finally {
       await this.concurrencyLimiter.release();
     }
@@ -77,6 +89,7 @@ export class TxService {
     toAddr: string;
     ttl: number;
   }): Promise<Record<string, unknown>> {
+    logger.info('smgRelease start', { uniqueId: params.uniqueId, tokenPairId: params.tokenPairId });
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
@@ -89,7 +102,11 @@ export class TxService {
         params.toAddr,
         params.ttl
       );
+      logger.info('smgRelease success', { blockHeight: result.public.blockHeight?.toString(), txHash: result.public.txHash });
       return this.formatResult(result);
+    } catch (error: any) {
+      logger.error('smgRelease failed', { error: error.message });
+      throw error;
     } finally {
       await this.concurrencyLimiter.release();
     }
@@ -101,19 +118,21 @@ export class TxService {
   async executeCrossProposal(params: {
     uniqueId: string;
   }): Promise<Record<string, unknown>> {
+    logger.info('executeCrossProposal start', { uniqueId: params.uniqueId });
     await this.concurrencyLimiter.acquire();
     try {
       const api = this.contractService.getApi();
       const result = await api.executeCrossProposal(params.uniqueId);
+      logger.info('executeCrossProposal success', { blockHeight: result.public.blockHeight?.toString(), txHash: result.public.txHash });
       return this.formatResult(result);
+    } catch (error: any) {
+      logger.error('executeCrossProposal failed', { error: error.message });
+      throw error;
     } finally {
       await this.concurrencyLimiter.release();
     }
   }
 
-  /**
-   * 格式化交易结果为统一格式
-   */
   private formatResult(result: FinalizedCallTxData<any, any>): Record<string, unknown> {
     return {
       public: {
@@ -121,25 +140,17 @@ export class TxService {
         blockHash: result.public.blockHash ?? '',
         txHash: result.public.txHash ?? '',
         txId: result.public.txId ?? '',
-        status: result.public.status??'',
+        status: result.public.status ?? '',
         blockTimestamp: result.public.blockTimestamp?.toString() ?? '',
         fees: result.public.fees,
-        identifiers : result.public.identifiers,
-        indexerId : result.public.indexerId,
-        blockAuthor : result.public.blockAuthor ?? '',
-
+        identifiers: result.public.identifiers,
+        indexerId: result.public.indexerId,
+        blockAuthor: result.public.blockAuthor ?? '',
       },
-      private: {
-      },
-      // blockHeight: result.public.blockHeight?.toString() ?? '',
-      // blockHash: result.public.blockHash ?? '',
-      // txHash: result.public.txHash ?? '',
+      private: {},
     };
   }
 
-  /**
-   * 获取并发度控制器（用于健康检查）
-   */
   getConcurrencyLimiter(): ConcurrencyLimiter {
     return this.concurrencyLimiter;
   }

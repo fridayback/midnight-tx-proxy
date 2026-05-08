@@ -1,5 +1,8 @@
 import { IConcurrencyProvider } from '../interfaces/IConcurrencyProvider.js';
 import { MidnightWalletSDK } from 'midnight-crosschain';
+import { getLogger } from '../utils/logger.js';
+
+const logger = getLogger('DustConcurrency');
 
 /**
  * 基于DUST availableCoins个数的并发度实现
@@ -16,10 +19,10 @@ export class DustConcurrencyProvider implements IConcurrencyProvider {
     try {
       const availableCoins = await this.walletSdk.getAvailableCoins();
       const dustCount = availableCoins.dustAvailableCoins.length;
-    return dustCount;
+      logger.debug('Dust available coins count', { dustCount });
+      return dustCount;
     } catch (error) {
-      console.error('Failed to get dust available coins for concurrency:', error);
-      // 出错时返回0，表示没有可用的并发
+      logger.error('Failed to get dust available coins for concurrency', { error: String(error) });
       return 0;
     }
   }
