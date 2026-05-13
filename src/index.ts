@@ -18,7 +18,9 @@ const logger = getLogger('Main');
 
 async function loadConfig(): Promise<AppConfig> {
   const networkId = process.env.NETWORK_ID || 'preprod';
-  const configContent = await fs.readFile('./config.json', 'utf-8');
+  const configPath = process.env.CONFIG_PATH || './config.json';
+  const configContent = await fs.readFile(configPath, 'utf-8');
+
   const configAll = JSON.parse(configContent);
   const config = configAll[networkId];
   if (!config) {

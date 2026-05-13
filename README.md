@@ -108,6 +108,120 @@ npm start
 
 ---
 
+## Docker 部署
+
+### 目录结构
+
+使用 Docker 部署时，需要在项目根目录下创建以下目录结构：
+
+```
+midnight-tx-proxy/
+├── config/
+│   ├── config.json          # 服务配置文件（必填）
+│   └── .env                 # 环境变量配置（必填）
+├── data/
+│   ├── log/                 # 日志输出目录（自动创建）
+│   ├── wallet-snapshots/    # 钱包快照目录（自动创建）
+│   └── midnight-level-db/   # LevelDB 数据目录（自动创建）
+├── Dockerfile
+├── docker-compose.yml
+└── ...
+```
+
+### 1. 准备配置文件
+
+在项目根目录下创建 `config/` 目录，放入您的配置文件和环境变量文件：
+
+```bash
+mkdir -p config data
+```
+
+**config/config.json** — 服务配置文件，直接从项目根目录的 `config.json` 复制并编辑：
+
+```bash
+cp config.json config/config.json
+```
+
+> 可根据需要修改 `config.json` 中的网络参数、端口等配置。
+
+**config/.env** — 环境变量文件，从 `.env.example` 复制并编辑：
+
+```bash
+cp .env.example config/.env
+```
+
+编辑 `config/.env` 至少设置钱包 seed：
+
+```ini
+# 钱包种子（必填）
+SEED=0000000000000000000000000000000000000000000000000000000000000001
+
+# 网络ID（可选，默认：preprod）
+NETWORK_ID=preprod
+
+# 合约地址（可选，覆盖config.json中的配置）
+CONTRACT_ADDRESS=
+```
+
+### 2. 构建并启动
+
+```bash
+# 构建镜像
+docker compose build
+
+# 启动服务（后台运行）
+docker compose up -d
+
+# 查看启动日志
+docker compose logs -f
+```
+
+### 3. 验证服务
+
+```bash
+# 健康检查
+curl http://localhost:3000/health
+```
+
+### 4. 常用命令
+
+```bash
+# 查看实时日志
+docker compose logs -f
+
+# 停止服务
+docker compose down
+
+# 重启服务
+docker compose restart
+
+# 查看运行状态
+docker compose ps
+
+# 重新构建并启动（代码变更后）
+docker compose up -d --build
+```
+
+### 5. 数据持久化说明
+
+Docker 部署时，以下数据通过卷挂载持久化到宿主机的 `data/` 目录：
+
+| 容器内路径 | 宿主机路径 | 说明 |
+|-----------|-----------|------|
+| `/app/log` | `./data/log` | 日志文件 |
+| `/app/wallet-snapshots` | `./data/wallet-snapshots` | 钱包状态快照 |
+| `/app/midnight-level-db` | `./data/midnight-level-db` | LevelDB 数据库 |
+
+> 如需清除数据，直接删除对应 `data/` 子目录即可。
+
+### 6. 配置说明
+
+- **配置文件**：通过 `CONFIG_PATH` 环境变量指定，默认读取 `/app/config/config.json`
+- **环境变量**：通过 `env_file` 加载 `./config/.env` 文件
+- **环境变量优先级**：`docker-compose.yml` 中的 `environment` > `.env` 文件 > `config.json`
+
+---
+
 ## API 使用指南
 
 ### 基础响应格式
@@ -129,6 +243,7 @@ npm start
   "error": "错误描述"
 }
 ```
+
 
 ---
 
@@ -315,6 +430,7 @@ curl -X POST http://localhost:3000/set-wallet-init-time \
 
 ```bash
 curl http://localhost:3000/info/wallet-init-time
+curl http://44.233.241.210:3000/info/wallet-init-time
 ```
 
 **响应示例：**

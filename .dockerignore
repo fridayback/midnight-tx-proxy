@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+.env
+.log
+wallet-snapshots
+midnight-level-db
+test
+config
+data
+.yarn.lock
+.vscode/launch.json

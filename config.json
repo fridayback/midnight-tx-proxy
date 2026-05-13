@@ -12,7 +12,7 @@
         "log": {
             "path": "./log",
             "retentionDays": 7,
-            "level": "info"
+            "level": "debug"
         },
         "wallet": {
             "snapshotIntervalSec": 10
