@@ -53,19 +53,19 @@ async function main(): Promise<void> {
   // 初始化日志管理器
   loggerManager.init(config.log);
   logger.info('Starting midnight-tx-proxy service...');
-  logger.info('Config loaded', { networkId: config.networkId, serverPort: config.serverPort });
+  logger.info('Config loaded', { networkId: config.networkId, serverPort: config.serverPort, contractAddress: config.contractAddress, requestTimeout: config.requestTimeout, logLevel: logger.level });
 
   // 创建seed provider（从环境变量获取seed）
   const seedProvider = new EnvSeedProvider();
 
   // 创建钱包服务
   const walletService = new WalletService(config, seedProvider);
-  await walletService.initialize();
-  logger.info('Wallet service initialized');
+  // await walletService.initialize();
+  // logger.info('Wallet service initialized');
 
   // 获取wallet SDK并创建并发度provider
-  const walletSdk = walletService.getWalletSdk();
-  const concurrencyProvider = new DustConcurrencyProvider(walletSdk);
+  // const walletSdk = walletService.getWalletSdk();
+  const concurrencyProvider = new DustConcurrencyProvider(walletService);
 
   // 初始化并发度
   const initialConcurrency = await concurrencyProvider.getMaxConcurrency();
@@ -74,8 +74,6 @@ async function main(): Promise<void> {
 
   // 创建合约服务
   const contractService = new ContractService(config, walletService);
-  await contractService.initialize();
-  logger.info('Contract service initialized');
 
   // 创建交易服务
   const txService = new TxService(contractService, concurrencyLimiter);
@@ -109,6 +107,12 @@ async function main(): Promise<void> {
 ====================================================
     `);
   });
+
+  await walletService.initialize();
+  logger.info('Wallet service initialized');
+
+  await contractService.initialize();
+  logger.info('Contract service initialized');
 }
 
 main().catch((error) => {

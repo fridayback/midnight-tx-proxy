@@ -274,11 +274,61 @@ curl http://localhost:3000/info/concurrency
 }
 ```
 
+
 ---
+### 6 设置钱包强制重启时间
 
-### 6. 提交交易操作
+```bash
+curl -X POST http://localhost:3000/set-wallet-init-time \
+  -H "Content-Type: application/json" \
+  -d '{
+    "time": 300000
+  }'
+```
 
-#### 6.1 smgMint - SMG 铸币
+**请求参数：**
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `uniqueId` | string | 唯一交易ID（64位hex） |
+| `smgId` | string | SMG ID（64位hex） |
+| `tokenPairId` | number | 代币对ID |
+| `amount` | number | 铸币数量 |
+| `fee` | number | 手续费 |
+| `toAddr` | string | 接收地址 |
+| `ttl` | number | 过期时间戳（毫秒） |
+
+**成功响应：**
+```json
+{
+  "success": true,
+  "data": {
+    "blockHeight": "12345",
+    "blockHash": "0x...",
+    "txHash": "0x..."
+  }
+}
+```
+
+---
+### 7. 查询wallet强制重启时间
+
+```bash
+curl http://localhost:3000/info/wallet-init-time
+```
+
+**响应示例：**
+```json
+{
+  "success":true,
+  "data":{
+    "walletInitTime":300000
+    }
+}
+
+### 7. 提交交易操作
+
+#### 7.1 smgMint - SMG 铸币
 
 ```bash
 curl -X POST http://localhost:3000/tx-service/smgMint \
@@ -320,7 +370,7 @@ curl -X POST http://localhost:3000/tx-service/smgMint \
 
 ---
 
-#### 6.2 smgRelease - SMG 释放
+#### 7.2 smgRelease - SMG 释放
 
 ```bash
 curl -X POST http://localhost:3000/tx-service/smgRelease \
@@ -342,7 +392,7 @@ curl -X POST http://localhost:3000/tx-service/smgRelease \
 
 ---
 
-#### 6.3 voteMultiCrossProposal - 投票跨链提案
+#### 7.3 voteMultiCrossProposal - 投票跨链提案
 
 ```bash
 curl -X POST http://localhost:3000/tx-service/voteMultiCrossProposal \
@@ -363,7 +413,7 @@ curl -X POST http://localhost:3000/tx-service/voteMultiCrossProposal \
 
 ---
 
-#### 6.4 executeCrossProposal - 执行跨链提案
+#### 7.4 executeCrossProposal - 执行跨链提案
 
 ```bash
 curl -X POST http://localhost:3000/tx-service/executeCrossProposal \
@@ -381,7 +431,7 @@ curl -X POST http://localhost:3000/tx-service/executeCrossProposal \
 
 ---
 
-### 7. 并发度超时
+### 8. 并发度超时
 
 当并发度达到上限时，请求会等待直到超时，返回 429 状态码：
 
@@ -395,7 +445,7 @@ curl -X POST http://localhost:3000/tx-service/executeCrossProposal \
 
 ---
 
-### 8. 错误处理
+### 9. 错误处理
 
 所有交易操作在失败时返回统一的错误格式：
 

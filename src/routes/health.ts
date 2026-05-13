@@ -17,6 +17,9 @@ export function createHealthRouter(
 
   router.get('/health', (_req: Request, res: Response) => {
     logger.debug('Health check requested');
+    if (!walletService.isInitialized || !contractService.isInitialized) {
+      return res.status(503).json({ success: false, error: 'Service not ready' });
+    }
     const status: HealthStatus = {
       status: 'ok',
       uptime: Math.floor((Date.now() - startTime) / 1000),
@@ -26,6 +29,9 @@ export function createHealthRouter(
   });
 
   router.get('/info/wallet', (_req: Request, res: Response) => {
+    if (!walletService.isInitialized) {
+      return res.status(503).json({ success: false, error: 'Wallet service not initialized' });
+    }
     try {
       const address = walletService.getWalletAddress();
       const walletInfo: WalletInfo = {
@@ -42,6 +48,9 @@ export function createHealthRouter(
   });
 
   router.get('/info/balances', async (_req: Request, res: Response) => {
+    if (!walletService.isInitialized) {
+      return res.status(503).json({ success: false, error: 'Wallet service not initialized' });
+    }
     try {
       const balances = await walletService.getBalances();
       const replacer = (key: any, value: any) => typeof value === 'bigint' ? value.toString() : value;
@@ -77,11 +86,44 @@ export function createHealthRouter(
   });
 
   router.get('/info/concurrency', (_req: Request, res: Response) => {
+    if (!walletService.isInitialized || !contractService.isInitialized) {
+      return res.status(200).json({ success: false, error: 'Service not ready' });
+    }
     try {
       const concurrencyStatus = txService.getConcurrencyLimiter().getStatus();
       res.json({ success: true, data: concurrencyStatus });
     } catch (error: any) {
       logger.error('Failed to get concurrency status', { error: error.message });
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.get('/info/wallet-init-time', (_req: Request, res: Response) => {
+    if (!walletService.isInitialized) {
+      return res.status(503).json({ success: false, error: 'Wallet service not initialized' });
+    }
+    try {
+      const initTime = walletService.walletForceInitTime;
+      res.json({ success: true, data: { walletInitTime: initTime } });
+    } catch (error: any) {
+      logger.error('Failed to get wallet init time', { error: error.message });
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  router.post('/set-wallet-init-time', async (_req: Request, res: Response) => {
+    logger.debug(`set wallet init time requested: ${_req.body.time}`);
+    if (!walletService.isInitialized) {
+      return res.status(503).json({ success: false, error: 'Wallet service not initialized' });
+    }
+    if(typeof _req.body.time !== 'number' || _req.body.time <= 0) {
+      return res.status(400).json({ success: false, error: 'Invalid time value' });
+    }
+    try {
+      walletService.setWalletForceInitTime(_req.body.time);
+      res.json({ success: true, message: 'Wallet initialized successfully' });
+    } catch (error: any) {
+      logger.error('Failed to force wallet initialization', { error: error.message });
       res.status(500).json({ success: false, error: error.message });
     }
   });

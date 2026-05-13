@@ -21,6 +21,10 @@ export class TxService {
     this.concurrencyLimiter = concurrencyLimiter;
   }
 
+  get isContractReady(): boolean {
+    return this.contractService.isInitialized && this.contractService.isWalletReady;
+  }
+
   /**
    * 执行 smgMint 操作
    */
@@ -33,9 +37,13 @@ export class TxService {
     toAddr: string;
     ttl: number;
   }): Promise<Record<string, unknown>> {
+    if (!this.isContractReady) {
+      throw new Error('Contract service not ready');
+    }
     logger.info('smgMint start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
+
       const api = this.contractService.getApi();
       const result = await api.smgMint(
         params.uniqueId,
@@ -59,12 +67,16 @@ export class TxService {
   /**
    * 执行 voteMultiCrossProposal 操作
    */
-  async voteMultiCrossProposal(params: 
-     Array<{ uniqueId: string; ttl: string | number | bigint }>
+  async voteMultiCrossProposal(params:
+    Array<{ uniqueId: string; ttl: string | number | bigint }>
   ): Promise<Record<string, unknown>> {
+    if (!this.isContractReady) {
+      throw new Error('Contract service not ready');
+    }
     logger.info('voteMultiCrossProposal start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
+
       const api = this.contractService.getApi();
       const result = await api.voteMultiCrossProposal(params);
       logger.info('voteMultiCrossProposal success', { blockHeight: result.public.blockHeight?.toString(), txHash: result.public.txHash });
@@ -89,9 +101,13 @@ export class TxService {
     toAddr: string;
     ttl: number;
   }): Promise<Record<string, unknown>> {
+    if (!this.isContractReady) {
+      throw new Error('Contract service not ready');
+    }
     logger.info('smgRelease start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
+
       const api = this.contractService.getApi();
       const result = await api.smgRelease(
         params.uniqueId,
@@ -118,6 +134,9 @@ export class TxService {
   async executeCrossProposal(params: {
     uniqueId: string;
   }): Promise<Record<string, unknown>> {
+    if (!this.isContractReady) {
+      throw new Error('Contract service not ready');
+    }
     logger.info('executeCrossProposal start: params =', params);
     await this.concurrencyLimiter.acquire();
     try {
@@ -152,6 +171,9 @@ export class TxService {
   }
 
   getConcurrencyLimiter(): ConcurrencyLimiter {
+    if (!this.isContractReady) {
+      throw new Error('Contract service not ready');
+    }
     return this.concurrencyLimiter;
   }
 }

@@ -22,6 +22,20 @@ export class WalletService {
     this.seedProvider = seedProvider;
   }
 
+  get isInitialized(): boolean {
+    return this.walletSdk !== null;
+  }
+
+  get walletForceInitTime(): number {
+    return this.walletSdk?.walletForceReInitTime ?? 0;
+  }
+
+   setWalletForceInitTime(time: number) {
+    if (this.walletSdk) {
+      this.walletSdk.setForceReInitTime(time);
+    }
+  }
+
   private snapshotfile(name:string): string {
     const snapshotDir = this.config.wallet?.walletSnapshotPath || './wallet-snapshots';
     const snapshotName = this.config.wallet?.walletSnapshotName || name+'.json';
@@ -51,7 +65,7 @@ export class WalletService {
       this.config.networkId as any
     );
 
-    this.walletSdk = new MidnightWalletSDK(appConfig, seed);
+    this.walletSdk = new MidnightWalletSDK(appConfig, seed,300*1000,300*1000);
     logger.info('Wallet addresses:',this.walletSdk.getAccountAddress());
 
     const snapshotfile = this.snapshotfile(this.walletSdk.getAccountAddress().unshieldedAddress);

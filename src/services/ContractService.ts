@@ -23,6 +23,14 @@ export class ContractService {
     this.walletService = walletService;
   }
 
+  get isInitialized(): boolean {
+    return this.api !== null;
+  }
+
+  get isWalletReady(): boolean {
+    return this.walletService.isInitialized;
+  }
+
   /**
    * 初始化合约API并加入合约
    */

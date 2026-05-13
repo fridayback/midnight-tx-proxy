@@ -1,5 +1,6 @@
 import { IConcurrencyProvider } from '../interfaces/IConcurrencyProvider.js';
 import { MidnightWalletSDK } from 'midnight-crosschain';
+import {WalletService} from '../services/WalletService.js';
 import { getLogger } from '../utils/logger.js';
 
 const logger = getLogger('DustConcurrency');
@@ -9,15 +10,15 @@ const logger = getLogger('DustConcurrency');
  * 使用钱包的DUST可用硬币数量作为最大并发度
  */
 export class DustConcurrencyProvider implements IConcurrencyProvider {
-  private walletSdk: MidnightWalletSDK;
+  private walletService: WalletService;
 
-  constructor(walletSdk: MidnightWalletSDK) {
-    this.walletSdk = walletSdk;
+  constructor(walletService: WalletService) {
+    this.walletService = walletService;
   }
 
   async getMaxConcurrency(): Promise<number> {
     try {
-      const availableCoins = await this.walletSdk.getAvailableCoins();
+      const availableCoins = await this.walletService.getWalletSdk().getAvailableCoins();
       const dustCount = availableCoins.dustAvailableCoins.length;
       logger.debug('Dust available coins count', { dustCount });
       return dustCount;

@@ -39,6 +39,14 @@ class LoggerManager {
   private config: LogConfig = { ...DEFAULT_LOG_CONFIG };
 
   init(config: LogConfig): void {
+    if(this.globalLogger) {
+      this.globalLogger.warn('Logger already initialized, re-initializing with new config', { newConfig: config });
+      // this.globalLogger.configure({ level: config.level });
+      this.globalLogger.level = config.level;
+      // Note: winston does not support dynamic reconfiguration of transports, so we only update the log level here.
+      // To fully apply new config (like path or retention), we would need to recreate the logger instance, which is more complex and may cause issues with existing loggers.
+      return;
+    }
     this.config = { ...config };
     const logDir = path.resolve(this.config.path);
     if (!fs.existsSync(logDir)) {
@@ -88,7 +96,7 @@ class LoggerManager {
     this.globalLogger = winston.createLogger({
       level: this.config.level,
       transports: [
-        new winston.transports.Console({ format: consoleFormat, level: this.config.level }),
+        new winston.transports.Console({ format: consoleFormat}),
         new DailyRotateFile({
           filename: path.join(logDirResolved, 'midnight-tx-proxy-%DATE%.log'),
           datePattern: 'YYYY-MM-DD',

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { loggerManager } from '../utils/logger.js';
+import { logger } from 'midnight-crosschain';
 
 /**
  * 日志管理路由
@@ -30,6 +31,7 @@ export function createLogRouter(): Router {
    * Body: { level: "debug" | "info" | "warn" | "error" }
    */
   router.post('/log/level', (req: Request, res: Response) => {
+    logger.info(`Received request to change log level from ${loggerManager.getLevel()} to ${req.body.level}`);
     try {
       const { level } = req.body;
       if (!level) {
