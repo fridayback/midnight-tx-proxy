@@ -13,9 +13,7 @@ services:
       # 配置文件（只读挂载）
       - ./config.json:/app/config/config.json:ro
       # 数据持久化
-      - ./log:/app/log
-      - ./wallet-snapshots:/app/wallet-snapshots
-      - ./midnight-level-db:/app/midnight-level-db
+      - ./:/app
     restart: unless-stopped
     environment:
       - NODE_ENV=production
