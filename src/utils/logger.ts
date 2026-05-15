@@ -1,16 +1,27 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import {Syslog} from 'winston-syslog';
 import * as fs from 'fs';
 import * as path from 'path';
 import { format as utilFormat } from 'util';
+import { getConfig } from './app-config.js';
 
 export interface LogConfig {
+  uniqueId: string;
   path: string;
   retentionDays: number;
   level: string;
+  logServer?: {
+    host: string;
+    port: number;
+    protocol?: 'udp4' | 'udp6' | 'tcp4' | 'tcp6';
+    appName?: string;
+    eol?: string;
+  };
 }
 
 const DEFAULT_LOG_CONFIG: LogConfig = {
+  uniqueId: 'default',
   path: './log',
   retentionDays: 7,
   level: 'info',
@@ -39,14 +50,14 @@ class LoggerManager {
   private config: LogConfig = { ...DEFAULT_LOG_CONFIG };
 
   init(config: LogConfig): void {
-    if(this.globalLogger) {
-      this.globalLogger.warn('Logger already initialized, re-initializing with new config', { newConfig: config });
-      // this.globalLogger.configure({ level: config.level });
-      this.globalLogger.level = config.level;
-      // Note: winston does not support dynamic reconfiguration of transports, so we only update the log level here.
-      // To fully apply new config (like path or retention), we would need to recreate the logger instance, which is more complex and may cause issues with existing loggers.
-      return;
-    }
+    // if(this.globalLogger) {
+    //   this.globalLogger.warn('Logger already initialized, re-initializing with new config', { newConfig: config });
+    //   // this.globalLogger.configure({ level: config.level });
+    //   this.globalLogger.level = config.level;
+    //   // Note: winston does not support dynamic reconfiguration of transports, so we only update the log level here.
+    //   // To fully apply new config (like path or retention), we would need to recreate the logger instance, which is more complex and may cause issues with existing loggers.
+    //   return;
+    // }
     this.config = { ...config };
     const logDir = path.resolve(this.config.path);
     if (!fs.existsSync(logDir)) {
@@ -96,6 +107,7 @@ class LoggerManager {
     this.globalLogger = winston.createLogger({
       level: this.config.level,
       transports: [
+        new Syslog({...this.config.logServer, app_name: 'midnight-tx-proxy'}),
         new winston.transports.Console({ format: consoleFormat}),
         new DailyRotateFile({
           filename: path.join(logDirResolved, 'midnight-tx-proxy-%DATE%.log'),
@@ -115,8 +127,9 @@ class LoggerManager {
    */
   getLogger(module: string): winston.Logger {
     // 如果还未初始化，先使用默认配置初始化
+    const config = getConfig();
     if (!this.globalLogger) {
-      this.init(DEFAULT_LOG_CONFIG);
+      this.init(config.log);
     }
 
     // 使用 child logger 携带模块名，所有 child 共享同一个文件输出

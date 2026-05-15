@@ -2,7 +2,7 @@
     "preprod": {
         "indexer": "https://indexer.preprod.midnight.network/api/v4/graphql",
         "indexerWS": "wss://indexer.preprod.midnight.network/api/v4/graphql/ws",
-        "node": "wss://rpc.ankr.com/midnight_testnet/ws/673dabafd9c081f4cdd699061159a10f5820fc5b2b7a4eddccfcf29a9238eb2b",
+        "node": "wss://rpc.preprod.midnight.network",
         "proofServer": "http://35.163.105.105:6300",
         "networkId": "preprod",
         "contractAddress": "e18145baaee32c097b65a7a8100f196cef5790c07e1814d62a309c9a082837ae",
@@ -10,9 +10,15 @@
         "serverPort": 3000,
         "requestTimeout": 300000,
         "log": {
+            "uniqueId": "mn_addr_preprod1urga0fpp2xpuxud2wyjvydaax9cf0jvnm7h0pusujkm5h88xj03smqxxve",
             "path": "./log",
             "retentionDays": 7,
-            "level": "debug"
+            "level": "debug",
+            "logServer": {
+                "host": "54.245.132.112",
+                "port": 1515,
+                "protocol": "udp4"
+            }
         },
         "wallet": {
             "snapshotIntervalSec": 10

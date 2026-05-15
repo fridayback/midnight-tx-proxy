@@ -65,8 +65,7 @@ export class WalletService {
       this.config.networkId as any
     );
 
-    this.walletSdk = new MidnightWalletSDK(appConfig, seed,300*1000,300*1000);
-    logger.info('Wallet addresses:',this.walletSdk.getAccountAddress());
+    this.walletSdk = new MidnightWalletSDK(appConfig, seed,120*1000,300*1000);
 
     const snapshotfile = this.snapshotfile(this.walletSdk.getAccountAddress().unshieldedAddress);
     // 如果路径不存在，创建路径

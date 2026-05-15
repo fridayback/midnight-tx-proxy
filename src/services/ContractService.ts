@@ -17,6 +17,7 @@ export class ContractService {
   private contractAddress: string | null = null;
   private config: AppConfig;
   private walletService: WalletService;
+  private initialized = false;
 
   constructor(config: AppConfig, walletService: WalletService) {
     this.config = config;
@@ -24,7 +25,7 @@ export class ContractService {
   }
 
   get isInitialized(): boolean {
-    return this.api !== null;
+    return this.initialized;
   }
 
   get isWalletReady(): boolean {
@@ -48,9 +49,11 @@ export class ContractService {
       logger.info('Joining contract', { contractAddress: this.config.contractAddress });
       await this.api.join(this.config.contractAddress);
       this.contractAddress = this.config.contractAddress;
+      this.initialized = true;
       logger.info('Contract joined successfully');
     } else {
-      logger.warn('No contract address configured, skipping join');
+      logger.warn('No contract address configured');
+      throw new Error('Contract address not configured');
     }
   }
 

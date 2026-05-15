@@ -1,8 +1,5 @@
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import * as fs from 'fs/promises';
-import { AppConfig } from './types.js';
 import { EnvSeedProvider, DustConcurrencyProvider } from './providers/index.js';
 import { WalletService } from './services/WalletService.js';
 import { ContractService } from './services/ContractService.js';
@@ -12,48 +9,17 @@ import { createHealthRouter } from './routes/health.js';
 import { createTxRouter } from './routes/tx.js';
 import { createLogRouter } from './routes/log.js';
 import { loggerManager, getLogger } from './utils/logger.js';
+import { ConfigManager, getConfig } from './utils/app-config.js';
 
 const startTime = Date.now();
 const logger = getLogger('Main');
 
-async function loadConfig(): Promise<AppConfig> {
-  const networkId = process.env.NETWORK_ID || 'preprod';
-  const configPath = process.env.CONFIG_PATH || './config.json';
-  const configContent = await fs.readFile(configPath, 'utf-8');
-
-  const configAll = JSON.parse(configContent);
-  const config = configAll[networkId];
-  if (!config) {
-    throw new Error(`Configuration for network '${networkId}' not found in config.json`);
-  }
-  return {
-    indexer: config.indexer,
-    indexerWS: config.indexerWS,
-    node: config.node,
-    proofServer: config.proofServer,
-    networkId: config.networkId || networkId,
-    contractAddress: process.env.CONTRACT_ADDRESS || config.contractAddress || '',
-    zkConfigPath: config.zkConfigPath || '',
-    serverPort: config.serverPort || 3000,
-    requestTimeout: config.requestTimeout || 300000,
-    log: {
-      path: config.log?.path || './log',
-      retentionDays: config.log?.retentionDays ?? 7,
-      level: config.log?.level || 'info',
-    },
-    wallet: {
-      snapshotIntervalSec: config.wallet?.snapshotIntervalSec,
-      walletSnapshotPath: config.wallet?.walletSnapshotPath,
-      walletSnapshotName: config.wallet?.walletSnapshotName,
-    },
-  };
-}
-
 async function main(): Promise<void> {
-  // 加载配置
-  const config = await loadConfig();
+  // 通过全局 ConfigManager 同步加载配置（config.json + 环境变量）
+  const config = getConfig();
+
   // 初始化日志管理器
-  loggerManager.init(config.log);
+  // loggerManager.init(config.log);
   logger.info('Starting midnight-tx-proxy service...');
   logger.info('Config loaded', { networkId: config.networkId, serverPort: config.serverPort, contractAddress: config.contractAddress, requestTimeout: config.requestTimeout, logLevel: logger.level });
 
@@ -70,7 +36,7 @@ async function main(): Promise<void> {
   const concurrencyProvider = new DustConcurrencyProvider(walletService);
 
   // 初始化并发度
-  const initialConcurrency = await concurrencyProvider.getMaxConcurrency();
+  const initialConcurrency = 0;//await concurrencyProvider.getMaxConcurrency();
   const concurrencyLimiter = new ConcurrencyLimiter(concurrencyProvider, initialConcurrency, config.requestTimeout);
   logger.info(`Concurrency limiter initialized with max ${initialConcurrency}`);
 
