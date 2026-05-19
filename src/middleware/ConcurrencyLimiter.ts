@@ -32,6 +32,7 @@ class Semaphore {
       }, timeout);
 
       this.queue.push({ resolve, reject, timer });
+      logger.debug('Request queued for concurrency slot', { timeout, current: this.current, max: this.max, queueLength: this.queue.length });
     });
   }
 
@@ -40,6 +41,7 @@ class Semaphore {
       const next = this.queue.shift()!;
       clearTimeout(next.timer);
       next.resolve();
+      logger.debug('Request dequeued for concurrency slot', { current: this.current, max: this.max, queueLength: this.queue.length });
     } else {
       this.current = Math.max(0, this.current - 1);
     }

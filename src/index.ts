@@ -58,13 +58,14 @@ async function main(): Promise<void> {
   app.use(createHealthRouter(walletService, contractService, txService, startTime));
   app.use(createTxRouter(txService));
   app.use(createLogRouter());
+  const ver = 'v1.0.0'; // 版本号可以从package.json读取或手动设置
 
   // 启动服务
   const port = config.serverPort;
   app.listen(port, () => {
     logger.info(`
 ====================================================
-  Midnight Tx Proxy Service Started
+  Midnight Tx Proxy Service Started [${ver}]
   Port: ${port}
   Network: ${config.networkId}
   Contract: ${config.contractAddress || 'Not configured'}
