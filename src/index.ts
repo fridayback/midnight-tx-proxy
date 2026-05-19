@@ -10,6 +10,7 @@ import { createTxRouter } from './routes/tx.js';
 import { createLogRouter } from './routes/log.js';
 import { loggerManager, getLogger } from './utils/logger.js';
 import { ConfigManager, getConfig } from './utils/app-config.js';
+import * as fs from 'fs';
 
 const startTime = Date.now();
 const logger = getLogger('Main');
@@ -58,7 +59,9 @@ async function main(): Promise<void> {
   app.use(createHealthRouter(walletService, contractService, txService, startTime));
   app.use(createTxRouter(txService));
   app.use(createLogRouter());
-  const ver = 'v1.0.0'; // 版本号可以从package.json读取或手动设置
+
+  // 从package.json获取版本号
+  const ver = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
 
   // 启动服务
   const port = config.serverPort;
