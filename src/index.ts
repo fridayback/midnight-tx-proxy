@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { EnvSeedProvider, DustConcurrencyProvider } from './providers/index.js';
+import { EnvSeedProvider, KeystoreSeedProvider, DustConcurrencyProvider } from './providers/index.js';
 import { WalletService } from './services/WalletService.js';
 import { ContractService } from './services/ContractService.js';
 import { TxService } from './services/TxService.js';
@@ -24,8 +24,27 @@ async function main(): Promise<void> {
   logger.info('Starting midnight-tx-proxy service...');
   logger.info('Config loaded', { networkId: config.networkId, serverPort: config.serverPort, contractAddress: config.contractAddress, requestTimeout: config.requestTimeout, logLevel: logger.level });
 
-  // 创建seed provider（从环境变量获取seed）
-  const seedProvider = new EnvSeedProvider();
+  // 解析命令行参数：--keystore <path> --keystore-password <password>
+  const args = process.argv.slice(2);
+  let keystorePath: string | undefined;
+  let keystorePassword: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--keystore' && i + 1 < args.length) {
+      keystorePath = args[++i];
+    }
+    if (args[i] === '--keystore-password' && i + 1 < args.length) {
+      keystorePassword = args[++i];
+    }
+  }
+
+  // 确定 keystore 路径：命令行参数优先，其次环境变量
+  const effectiveKeystorePath = keystorePath || process.env.KEYSTORE_PATH;
+
+  // 根据是否提供 keystore 路径选择 seed provider
+  const seedProvider = effectiveKeystorePath
+    ? new KeystoreSeedProvider(effectiveKeystorePath, keystorePassword)
+    : new EnvSeedProvider();
+  logger.info(`Using seed provider: ${effectiveKeystorePath ? 'KeystoreSeedProvider' : 'EnvSeedProvider'}`);
 
   // 创建钱包服务
   const walletService = new WalletService(config, seedProvider);

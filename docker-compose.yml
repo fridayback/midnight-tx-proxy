@@ -12,9 +12,14 @@ services:
     volumes:
       # 配置文件（只读挂载）
       - ./config.json:/app/config/config.json:ro
+      # keystore 文件（可选，使用 keystore 方式时挂载）
+      - ./keystore/keystore.json:/app/keystore/keystore.json:ro
       # 数据持久化
       - ./:/app
-    restart: unless-stopped
+    restart: always
     environment:
       - NODE_ENV=production
       - CONFIG_PATH=/app/config/config.json
+      # keystore 配置（可选，使用 keystore 方式时设置）
+      - KEYSTORE_PATH=/app/keystore/keystore.json
+      # - KEYSTORE_PASSWORD=yourpassword

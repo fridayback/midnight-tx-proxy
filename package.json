@@ -25,6 +25,7 @@
     "classic-level": "^3.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
+    "ethers": "^6.16.0",
     "express": "^5.2.1",
     "midnight-crosschain": "https://github.com/fridayback/midnight-crosschain.git#0.22",
     "winston": "^3.19.0",
